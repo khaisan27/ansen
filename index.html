@@ -1,0 +1,3915 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <title>Sistem Absensi - SMA Negeri 1 Kudus</title>
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        font-family: "Poppins", sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+      }
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .card-hover {
+        transition:
+          transform 0.3s ease,
+          box-shadow 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .fade-in {
+        animation: fadeIn 0.5s ease-out;
+      }
+      .scroll-smooth {
+        scroll-behavior: smooth;
+      }
+
+      /* Background Beranda dengan overlay */
+      .beranda-bg {
+        background:
+          linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
+          url("https://images.unsplash.com/photo-1562774053-701939374585?w=1920")
+            center/cover no-repeat;
+        background-attachment: fixed;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .sidebar-mobile {
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+        }
+        .sidebar-mobile.open {
+          transform: translateX(0);
+        }
+        .beranda-bg {
+          background-attachment: scroll;
+        }
+      }
+
+      /* Touch-friendly buttons */
+      @media (max-width: 768px) {
+        button,
+        a {
+          min-height: 44px;
+          min-width: 44px;
+        }
+      }
+
+      /* Prevent zoom on input focus (iOS) */
+      @media screen and (max-width: 768px) {
+        input,
+        select,
+        textarea {
+          font-size: 16px !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect } = React;
+
+      // Icon Components (Simplified SVG icons)
+      const Icon = ({ type, className = "w-6 h-6" }) => {
+        const icons = {
+          user: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+          ),
+          calendar: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          ),
+          clock: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          ),
+          users: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+          ),
+          graduation: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 14l9-5-9-5-9 5 9 5z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
+              />
+            </svg>
+          ),
+          settings: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+          ),
+          chart: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+          ),
+          home: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
+            </svg>
+          ),
+          qr: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+              />
+            </svg>
+          ),
+          bell: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
+            </svg>
+          ),
+          logout: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+          ),
+          edit: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          ),
+          trash: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+          ),
+          userPlus: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+              />
+            </svg>
+          ),
+          camera: (
+            <svg
+              className={className}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+          ),
+        };
+        return icons[type] || null;
+      };
+
+      // Main App Component
+      const App = () => {
+        // Load data from localStorage with fallback
+        const loadFromStorage = (key, defaultValue) => {
+          try {
+            const saved = localStorage.getItem(key);
+            if (saved === null) return defaultValue;
+            const parsed = JSON.parse(saved);
+
+            // PENTING: Pastikan admin selalu ada di users
+            if (key === "users") {
+              const hasAdmin = parsed.some((u) => u.username === "admin");
+              if (!hasAdmin) {
+                console.log("Admin not found, adding default admin");
+                return [
+                  {
+                    id: 1,
+                    username: "admin",
+                    password: "admin123",
+                    status: "admin",
+                    nama: "Administrator",
+                    foto: null,
+                  },
+                  ...parsed,
+                ];
+              }
+            }
+
+            return parsed;
+          } catch (error) {
+            return defaultValue;
+          }
+        };
+
+        // Save to localStorage
+        const saveToStorage = (key, value) => {
+          try {
+            localStorage.setItem(key, JSON.stringify(value));
+          } catch (error) {
+            console.error("Error saving to localStorage:", error);
+          }
+        };
+
+        const [currentPage, setCurrentPage] = useState(() =>
+          loadFromStorage("currentPage", "login"),
+        );
+        const [currentUser, setCurrentUser] = useState(() =>
+          loadFromStorage("currentUser", null),
+        );
+        const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+        const [users, setUsers] = useState(() =>
+          loadFromStorage("users", [
+            {
+              id: 1,
+              username: "admin",
+              password: "admin123",
+              status: "admin",
+              nama: "Administrator",
+              foto: null,
+            },
+          ]),
+        );
+        const [absensi, setAbsensi] = useState(() =>
+          loadFromStorage("absensi", []),
+        );
+        const [izinMessages, setIzinMessages] = useState(() =>
+          loadFromStorage("izinMessages", []),
+        );
+        const [unreadMessageCount, setUnreadMessageCount] = useState(() =>
+          loadFromStorage("unreadMessageCount", 0),
+        );
+        const [jamAbsensi, setJamAbsensi] = useState(() =>
+          loadFromStorage("jamAbsensi", { mulai: "07:00", selesai: "07:30" }),
+        );
+        const [tahunAjaran, setTahunAjaran] = useState(() =>
+          loadFromStorage("tahunAjaran", "2024/2025"),
+        );
+        const [alumni, setAlumni] = useState(() =>
+          loadFromStorage("alumni", []),
+        );
+        const [hariLiburMingguan, setHariLiburMingguan] = useState(() =>
+          loadFromStorage("hariLiburMingguan", ["Minggu"]),
+        );
+        const [hariLiburPanjang, setHariLiburPanjang] = useState(() =>
+          loadFromStorage("hariLiburPanjang", []),
+        );
+        const [logoSekolah, setLogoSekolah] = useState(() =>
+          loadFromStorage("logoSekolah", null),
+        );
+        const [backgroundSekolah, setBackgroundSekolah] = useState(() =>
+          loadFromStorage(
+            "backgroundSekolah",
+            "https://images.unsplash.com/photo-1562774053-701939374585?w=1920",
+          ),
+        );
+        const [visiSekolah, setVisiSekolah] = useState(() =>
+          loadFromStorage(
+            "visiSekolah",
+            "Menjadi sekolah unggulan yang menghasilkan lulusan berakhlak mulia, berprestasi, dan berwawasan global.",
+          ),
+        );
+        const [misiSekolah, setMisiSekolah] = useState(() =>
+          loadFromStorage("misiSekolah", [
+            "Menyelenggarakan pendidikan berkualitas",
+            "Mengembangkan karakter siswa yang berakhlak mulia",
+            "Meningkatkan prestasi akademik dan non-akademik",
+          ]),
+        );
+        const [peraturanSekolah, setPeraturanSekolah] = useState(() =>
+          loadFromStorage("peraturanSekolah", [
+            "Datang tepat waktu",
+            "Berpakaian rapi dan sopan",
+            "Menjaga kebersihan lingkungan",
+            "Menghormati guru dan sesama siswa",
+          ]),
+        );
+        const [peraturanAbsensi, setPeraturanAbsensi] = useState(() =>
+          loadFromStorage("peraturanAbsensi", [
+            "Absensi dilakukan setiap hari",
+            "Siswa wajib melakukan absensi dengan scan QR Code",
+            "Keterlambatan lebih dari 15 menit dianggap terlambat",
+            "Izin harus diajukan melalui sistem",
+            "Tanpa keterangan akan dianggap alpha",
+          ]),
+        );
+
+        // Effect to save state changes to localStorage
+        useEffect(() => {
+          saveToStorage("currentPage", currentPage);
+        }, [currentPage]);
+
+        useEffect(() => {
+          saveToStorage("currentUser", currentUser);
+        }, [currentUser]);
+
+        useEffect(() => {
+          // Pastikan admin selalu ada
+          const hasAdmin = users.some(
+            (u) => u.username === "admin" && u.password === "admin123",
+          );
+          if (!hasAdmin) {
+            console.log("Admin missing! Re-adding default admin...");
+            const adminUser = {
+              id: 1,
+              username: "admin",
+              password: "admin123",
+              status: "admin",
+              nama: "Administrator",
+              foto: null,
+            };
+            setUsers([adminUser, ...users]);
+          } else {
+            saveToStorage("users", users);
+          }
+        }, [users]);
+
+        useEffect(() => {
+          saveToStorage("absensi", absensi);
+        }, [absensi]);
+
+        useEffect(() => {
+          saveToStorage("izinMessages", izinMessages);
+          // Update unread count ketika ada pesan baru
+          const unreadCount = izinMessages.filter(
+            (m) => m.status === "pending",
+          ).length;
+          setUnreadMessageCount(unreadCount);
+        }, [izinMessages]);
+
+        useEffect(() => {
+          saveToStorage("unreadMessageCount", unreadMessageCount);
+        }, [unreadMessageCount]);
+
+        useEffect(() => {
+          saveToStorage("jamAbsensi", jamAbsensi);
+        }, [jamAbsensi]);
+
+        useEffect(() => {
+          saveToStorage("tahunAjaran", tahunAjaran);
+        }, [tahunAjaran]);
+
+        useEffect(() => {
+          saveToStorage("alumni", alumni);
+        }, [alumni]);
+
+        useEffect(() => {
+          saveToStorage("hariLiburMingguan", hariLiburMingguan);
+        }, [hariLiburMingguan]);
+
+        useEffect(() => {
+          saveToStorage("hariLiburPanjang", hariLiburPanjang);
+        }, [hariLiburPanjang]);
+
+        // Login Handler
+        const handleLogin = (username, password) => {
+          console.log("=== LOGIN ATTEMPT ===");
+          console.log("Input username:", username);
+          console.log("Input password:", password);
+          console.log("Available users:", users);
+
+          const user = users.find(
+            (u) => u.username === username && u.password === password,
+          );
+          console.log("Found user:", user);
+
+          if (user) {
+            console.log("LOGIN SUCCESS!");
+            setCurrentUser(user);
+            setCurrentPage("beranda");
+            return true;
+          }
+          console.log("LOGIN FAILED!");
+          return false;
+        };
+
+        // Register Handler
+        const handleRegister = (userData) => {
+          console.log("=== REGISTER ATTEMPT ===");
+          console.log("New user data:", userData);
+
+          // Cek apakah username sudah ada
+          const usernameExists = users.some(
+            (u) => u.username === userData.username,
+          );
+          if (usernameExists) {
+            console.log("REGISTER FAILED: Username already exists");
+            alert("❌ Username sudah digunakan! Pilih username lain.");
+            return false;
+          }
+
+          const newUser = {
+            id: Date.now(), // Gunakan timestamp untuk ID unik
+            ...userData,
+            foto: null,
+          };
+
+          console.log("Creating new user:", newUser);
+          setUsers([...users, newUser]);
+          console.log("REGISTER SUCCESS!");
+          return true;
+        };
+
+        // Logout Handler
+        const handleLogout = () => {
+          if (confirm("Apakah Anda yakin ingin logout?")) {
+            setCurrentUser(null);
+            setCurrentPage("login");
+            // Hanya hapus currentUser, jangan hapus users
+            localStorage.removeItem("currentUser");
+            localStorage.setItem("currentPage", JSON.stringify("login"));
+            console.log("Logout success, users still available:", users);
+          }
+        };
+
+        // Absensi Handler
+        const handleAbsensi = (userId, status = "hadir") => {
+          const today = new Date().toISOString().split("T")[0];
+          const existingAbsensi = absensi.find(
+            (a) => a.userId === userId && a.tanggal === today,
+          );
+
+          if (!existingAbsensi) {
+            setAbsensi([
+              ...absensi,
+              {
+                userId,
+                tanggal: today,
+                waktu: new Date().toLocaleTimeString("id-ID"),
+                status,
+              },
+            ]);
+            return true;
+          }
+          return false;
+        };
+
+        // Izin Handler
+        const handleIzin = (izinData) => {
+          const newMessage = {
+            id: Date.now(),
+            ...izinData,
+            tanggal: new Date().toISOString().split("T")[0],
+            waktu: new Date().toLocaleTimeString("id-ID"),
+            status: "pending", // pending, approved, rejected
+          };
+          setIzinMessages([...izinMessages, newMessage]);
+          // Jangan langsung absen, tunggu approval admin
+        };
+
+        // Update Profile Handler
+        const handleUpdateProfile = (updates) => {
+          setUsers(
+            users.map((u) =>
+              u.id === currentUser.id ? { ...u, ...updates } : u,
+            ),
+          );
+          setCurrentUser({ ...currentUser, ...updates });
+        };
+
+        // Delete User Handler
+        const handleDeleteUser = (userId) => {
+          setUsers(users.filter((u) => u.id !== userId));
+        };
+
+        // Component: Login Page
+        const LoginPage = () => {
+          const [username, setUsername] = useState("");
+          const [password, setPassword] = useState("");
+          const [error, setError] = useState("");
+          const [showDebug, setShowDebug] = useState(false);
+
+          const handleSubmit = (e) => {
+            e.preventDefault();
+            console.log("Form submitted with:", { username, password });
+
+            if (handleLogin(username, password)) {
+              setError("");
+            } else {
+              setError("Username atau password salah!");
+            }
+          };
+
+          return (
+            <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
+                <div className="text-center mb-8">
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <Icon type="graduation" className="w-12 h-12 text-white" />
+                  </div>
+                  <h1 className="text-2xl font-bold text-gray-800">
+                    SMA NEGERI 1 KUDUS
+                  </h1>
+                  <p className="text-gray-600 mt-2">Sistem Absensi Online</p>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Masukkan username"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Masukkan password"
+                      required
+                    />
+                  </div>
+
+                  {error && <p className="text-red-500 text-sm">{error}</p>}
+
+                  <button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition duration-200 font-semibold"
+                  >
+                    Login
+                  </button>
+                </form>
+
+                <div className="mt-6 text-center space-y-2">
+                  <button
+                    onClick={() => setCurrentPage("register")}
+                    className="text-blue-600 hover:underline text-sm font-medium block w-full"
+                  >
+                    Belum punya akun? Daftar di sini
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (
+                        confirm(
+                          "Reset semua data? Aplikasi akan kembali ke pengaturan awal.",
+                        )
+                      ) {
+                        localStorage.clear();
+                        window.location.reload();
+                      }
+                    }}
+                    className="text-red-600 hover:underline text-xs font-medium block w-full"
+                  >
+                    🔄 Reset Semua Data
+                  </button>
+                  <button
+                    onClick={() => setShowDebug(!showDebug)}
+                    className="text-gray-600 hover:underline text-xs block w-full"
+                  >
+                    {showDebug
+                      ? "🔽 Sembunyikan Debug"
+                      : "🔼 Tampilkan Debug Info"}
+                  </button>
+                </div>
+
+                {/* Debug Panel */}
+                {showDebug && (
+                  <div className="mt-4 bg-gray-100 border-2 border-gray-300 rounded-lg p-4">
+                    <p className="text-xs font-bold mb-2 text-center">
+                      📊 Debug Information
+                    </p>
+                    <div className="text-xs space-y-1">
+                      <div className="bg-white p-2 rounded">
+                        <p>
+                          <strong>Total Users:</strong> {users.length}
+                        </p>
+                        <p>
+                          <strong>Admin Exists:</strong>{" "}
+                          {users.some((u) => u.username === "admin")
+                            ? "✅ Yes"
+                            : "❌ No"}
+                        </p>
+                        <p>
+                          <strong>Current Page:</strong> {currentPage}
+                        </p>
+                        <p>
+                          <strong>Logged In:</strong>{" "}
+                          {currentUser ? `✅ ${currentUser.nama}` : "❌ No"}
+                        </p>
+                      </div>
+                      <div className="mt-2 p-2 bg-white rounded max-h-64 overflow-auto">
+                        <p className="font-bold mb-2">
+                          📋 Available Users (Klik untuk Login):
+                        </p>
+                        <div className="space-y-1">
+                          {users.map((u, i) => (
+                            <div
+                              key={i}
+                              className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-blue-50"
+                            >
+                              <div className="text-xs flex-1">
+                                <p className="font-semibold">
+                                  {i + 1}. {u.nama}
+                                </p>
+                                <p className="text-gray-600">
+                                  <strong>User:</strong> {u.username} |
+                                  <strong> Pass:</strong> {u.password} |
+                                  <strong> Status:</strong> {u.status}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setUsername(u.username);
+                                  setPassword(u.password);
+                                  setTimeout(() => {
+                                    if (handleLogin(u.username, u.password)) {
+                                      alert(
+                                        "✅ Login berhasil sebagai " + u.nama,
+                                      );
+                                    }
+                                  }, 100);
+                                }}
+                                className="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                              >
+                                Login
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        };
+
+        // Component: Register Page
+        const RegisterPage = () => {
+          const [formData, setFormData] = useState({
+            username: "",
+            password: "",
+            status: "siswa",
+            nama: "",
+            kelas: "",
+            nis: "",
+            jabatan: "",
+            tanggalLahir: "",
+          });
+          const [error, setError] = useState("");
+
+          const handleSubmit = (e) => {
+            e.preventDefault();
+            console.log("Register form submitted:", formData);
+
+            const result = handleRegister(formData);
+            if (result) {
+              const credentials = `Username: ${formData.username}\nPassword: ${formData.password}`;
+              alert(
+                `✅ Registrasi berhasil!\n\n${credentials}\n\nSilakan login dengan kredensial di atas.`,
+              );
+              setCurrentPage("login");
+            } else {
+              setError("Username sudah digunakan! Pilih username lain.");
+            }
+          };
+
+          return (
+            <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto fade-in">
+                <div className="text-center mb-8">
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <Icon type="graduation" className="w-12 h-12 text-white" />
+                  </div>
+                  <h1 className="text-2xl font-bold text-gray-800">
+                    SMA NEGERI 1 KUDUS
+                  </h1>
+                  <p className="text-gray-600 mt-2">Registrasi Akun Baru</p>
+                  <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                    <p className="text-xs text-blue-800">
+                      📊 Sudah terdaftar:{" "}
+                      <strong>{users.length} pengguna</strong>
+                    </p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.username}
+                      onChange={(e) =>
+                        setFormData({ ...formData, username: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nama Lengkap
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.nama}
+                      onChange={(e) =>
+                        setFormData({ ...formData, nama: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) =>
+                        setFormData({ ...formData, status: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="siswa">Siswa</option>
+                      <option value="guru">Guru</option>
+                    </select>
+                  </div>
+
+                  {formData.status === "siswa" && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Kelas
+                        </label>
+                        <select
+                          value={formData.kelas}
+                          onChange={(e) =>
+                            setFormData({ ...formData, kelas: e.target.value })
+                          }
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          required
+                        >
+                          <option value="">Pilih Kelas</option>
+                          <option value="10A">10A</option>
+                          <option value="10B">10B</option>
+                          <option value="11 IPA">11 IPA</option>
+                          <option value="11 IPS">11 IPS</option>
+                          <option value="12 IPA">12 IPA</option>
+                          <option value="12 IPS">12 IPS</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          NIS
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.nis}
+                          onChange={(e) =>
+                            setFormData({ ...formData, nis: e.target.value })
+                          }
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {formData.status === "guru" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Jabatan
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.jabatan}
+                        onChange={(e) =>
+                          setFormData({ ...formData, jabatan: e.target.value })
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Contoh: Guru Matematika"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tanggal Lahir
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.tanggalLahir}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          tanggalLahir: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+
+                  {error && <p className="text-red-500 text-sm">{error}</p>}
+
+                  <button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition duration-200 font-semibold"
+                  >
+                    Daftar
+                  </button>
+                </form>
+
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => setCurrentPage("login")}
+                    className="text-blue-600 hover:underline text-sm font-medium"
+                  >
+                    Sudah punya akun? Login di sini
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // Component: Sidebar
+        const Sidebar = () => {
+          const menuItems = [
+            {
+              id: "beranda",
+              icon: "home",
+              label: "Beranda",
+              allowed: ["admin", "guru", "siswa"],
+            },
+            {
+              id: "absensi",
+              icon: "clock",
+              label: "Absensi",
+              allowed: ["admin", "guru", "siswa"],
+            },
+            {
+              id: "data-diri",
+              icon: "user",
+              label: "Data Diri",
+              allowed: ["admin", "guru", "siswa"],
+            },
+            {
+              id: "siswa",
+              icon: "users",
+              label: "Siswa",
+              allowed: ["admin", "siswa"],
+            },
+            {
+              id: "guru",
+              icon: "graduation",
+              label: "Guru",
+              allowed: ["admin", "guru"],
+            },
+            {
+              id: "alumni",
+              icon: "graduation",
+              label: "Alumni",
+              allowed: ["admin", "guru", "siswa"],
+            },
+            {
+              id: "data-pengguna",
+              icon: "users",
+              label: "Data Pengguna",
+              allowed: ["admin"],
+            },
+            {
+              id: "statistik",
+              icon: "chart",
+              label: "Statistik",
+              allowed: ["admin", "guru", "siswa"],
+            },
+            {
+              id: "pengaturan",
+              icon: "settings",
+              label: "Pengaturan",
+              allowed: ["admin"],
+            },
+          ];
+
+          const handleMenuClick = (pageId) => {
+            setCurrentPage(pageId);
+            setMobileMenuOpen(false); // Close menu on mobile after click
+          };
+
+          return (
+            <>
+              {/* Overlay for mobile */}
+              {mobileMenuOpen && (
+                <div
+                  className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+                  onClick={() => setMobileMenuOpen(false)}
+                ></div>
+              )}
+
+              {/* Sidebar */}
+              <div
+                className={`
+                            fixed md:relative
+                            w-64 bg-gradient-to-b from-blue-900 to-purple-900 text-white min-h-screen p-4
+                            transform transition-transform duration-300 ease-in-out z-50
+                            ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+                        `}
+              >
+                <div className="mb-8 text-center">
+                  <div className="w-16 h-16 bg-white rounded-full mx-auto mb-3 flex items-center justify-center">
+                    <Icon type="graduation" className="w-8 h-8 text-blue-900" />
+                  </div>
+                  <h2 className="text-base font-bold">SMA NEGERI 1 KUDUS</h2>
+                </div>
+
+                <nav className="space-y-2">
+                  {menuItems.map((item) => {
+                    if (item.allowed.includes(currentUser?.status)) {
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => handleMenuClick(item.id)}
+                          className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition duration-200 ${
+                            currentPage === item.id
+                              ? "bg-white bg-opacity-20 shadow-lg"
+                              : "hover:bg-white hover:bg-opacity-10"
+                          }`}
+                        >
+                          <Icon type={item.icon} className="w-5 h-5" />
+                          <span className="text-sm">{item.label}</span>
+                        </button>
+                      );
+                    }
+                    return null;
+                  })}
+                </nav>
+              </div>
+            </>
+          );
+        };
+
+        // Component: Header
+        const Header = () => {
+          const handleOpenMessages = () => {
+            setCurrentPage("pesan");
+            setUnreadMessageCount(0);
+          };
+
+          return (
+            <div className="bg-white shadow-md px-4 md:px-6 py-4 flex justify-between items-center">
+              {/* Hamburger Menu - Mobile Only */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 hover:bg-gray-100 rounded-lg mr-2"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </button>
+
+              <h1 className="text-sm md:text-xl font-bold text-gray-800 truncate">
+                <span className="hidden md:inline">
+                  Sistem Absensi SMA Negeri 1 Kudus
+                </span>
+                <span className="md:hidden">SMA N 1 Kudus</span>
+              </h1>
+
+              <div className="flex items-center space-x-2 md:space-x-4">
+                {currentUser?.status === "admin" && (
+                  <button
+                    onClick={handleOpenMessages}
+                    className="relative p-2 hover:bg-gray-100 rounded-full transition"
+                  >
+                    <Icon
+                      type="bell"
+                      className="w-5 h-5 md:w-6 md:h-6 text-gray-700"
+                    />
+                    {unreadMessageCount > 0 && (
+                      <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 md:w-5 md:h-5 flex items-center justify-center font-bold animate-pulse">
+                        {unreadMessageCount}
+                      </span>
+                    )}
+                  </button>
+                )}
+                <button
+                  onClick={() => setCurrentPage("profil")}
+                  className="flex items-center space-x-2 hover:bg-gray-100 px-2 md:px-3 py-2 rounded-lg transition"
+                >
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    {currentUser?.foto ? (
+                      <img
+                        src={currentUser.foto}
+                        alt="Profil"
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <Icon
+                        type="user"
+                        className="w-4 h-4 md:w-6 md:h-6 text-white"
+                      />
+                    )}
+                  </div>
+                  <div className="text-left hidden sm:block">
+                    <p className="font-semibold text-xs md:text-sm">
+                      {currentUser?.nama}
+                    </p>
+                    <p className="text-xs text-gray-500 capitalize">
+                      {currentUser?.status}
+                    </p>
+                  </div>
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 hover:bg-red-100 rounded-full text-red-600 transition"
+                  title="Logout"
+                >
+                  <Icon type="logout" className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
+              </div>
+            </div>
+          );
+        };
+
+        // Component: Beranda
+        const BerandaPage = () => {
+          return (
+            <div
+              className="min-h-screen"
+              style={{
+                background: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('${backgroundSekolah}') center/cover no-repeat`,
+                backgroundAttachment:
+                  window.innerWidth > 768 ? "fixed" : "scroll",
+              }}
+            >
+              <div className="p-4 md:p-6">
+                {/* Hero Section dengan Background */}
+                <div className="bg-white bg-opacity-95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 mb-6 text-center fade-in">
+                  <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl overflow-hidden">
+                    {logoSekolah ? (
+                      <img
+                        src={logoSekolah}
+                        alt="Logo Sekolah"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Icon
+                        type="graduation"
+                        className="w-12 h-12 md:w-16 md:h-16 text-white"
+                      />
+                    )}
+                  </div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+                    SMA NEGERI 1 KUDUS
+                  </h1>
+                  <p className="text-sm md:text-base text-gray-600">
+                    Jl. Pendidikan No. 123, Kudus, Jawa Tengah
+                  </p>
+                  <div className="mt-4 inline-block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-semibold">
+                    Tahun Ajaran {tahunAjaran}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div className="bg-white bg-opacity-95 backdrop-blur-sm rounded-xl shadow-md p-4 md:p-6 card-hover">
+                    <div className="flex items-center mb-4">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <span className="text-2xl">🎯</span>
+                      </div>
+                      <h2 className="text-lg md:text-xl font-bold text-blue-900">
+                        Visi
+                      </h2>
+                    </div>
+                    <p className="text-sm md:text-base text-gray-700">
+                      {visiSekolah}
+                    </p>
+                  </div>
+
+                  <div className="bg-white bg-opacity-95 backdrop-blur-sm rounded-xl shadow-md p-4 md:p-6 card-hover">
+                    <div className="flex items-center mb-4">
+                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                        <span className="text-2xl">📋</span>
+                      </div>
+                      <h2 className="text-lg md:text-xl font-bold text-blue-900">
+                        Misi
+                      </h2>
+                    </div>
+                    <ul className="list-disc list-inside text-sm md:text-base text-gray-700 space-y-2">
+                      {misiSekolah.map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="bg-white bg-opacity-95 backdrop-blur-sm rounded-xl shadow-md p-4 md:p-6 card-hover">
+                    <div className="flex items-center mb-4">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                        <span className="text-2xl">📖</span>
+                      </div>
+                      <h2 className="text-lg md:text-xl font-bold text-blue-900">
+                        Peraturan Sekolah
+                      </h2>
+                    </div>
+                    <ul className="list-disc list-inside text-sm md:text-base text-gray-700 space-y-2">
+                      {peraturanSekolah.map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="bg-white bg-opacity-95 backdrop-blur-sm rounded-xl shadow-md p-4 md:p-6 card-hover">
+                    <div className="flex items-center mb-4">
+                      <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                        <span className="text-2xl">⏰</span>
+                      </div>
+                      <h2 className="text-lg md:text-xl font-bold text-blue-900">
+                        Peraturan Absensi
+                      </h2>
+                    </div>
+                    <ul className="list-disc list-inside text-sm md:text-base text-gray-700 space-y-2">
+                      {peraturanAbsensi.map((item, index) => {
+                        // Replace placeholder jam absensi
+                        const itemText = item.includes("setiap hari")
+                          ? `Absensi dilakukan setiap hari pukul ${jamAbsensi.mulai} - ${jamAbsensi.selesai}`
+                          : item;
+                        return <li key={index}>{itemText}</li>;
+                      })}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // Component: Absensi (Simplified for space)
+        const AbsensiPage = () => {
+          const [selectedKelas, setSelectedKelas] = useState("");
+          const [scanMode, setScanMode] = useState(false);
+          const [showCamera, setShowCamera] = useState(false);
+          const [stream, setStream] = useState(null);
+          const [showIzinForm, setShowIzinForm] = useState(false);
+          const [izinForm, setIzinForm] = useState({
+            nama: currentUser?.nama || "",
+            kelas: currentUser?.kelas || "",
+            nis: currentUser?.nis || "",
+            keterangan: "",
+          });
+
+          const kelasList = [
+            "Guru",
+            "10A",
+            "10B",
+            "11 IPA",
+            "11 IPS",
+            "12 IPA",
+            "12 IPS",
+          ];
+
+          // Cleanup camera stream when component unmounts or camera closes
+          useEffect(() => {
+            return () => {
+              if (stream) {
+                stream.getTracks().forEach((track) => track.stop());
+              }
+            };
+          }, [stream]);
+
+          const startCamera = async () => {
+            try {
+              const mediaStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment" },
+              });
+              setStream(mediaStream);
+              setShowCamera(true);
+
+              // Set video element
+              setTimeout(() => {
+                const video = document.getElementById("camera-preview");
+                if (video) {
+                  video.srcObject = mediaStream;
+                }
+              }, 100);
+            } catch (error) {
+              alert(
+                "Tidak dapat mengakses kamera. Pastikan Anda memberikan izin akses kamera.",
+              );
+              console.error("Camera error:", error);
+            }
+          };
+
+          const stopCamera = () => {
+            if (stream) {
+              stream.getTracks().forEach((track) => track.stop());
+              setStream(null);
+            }
+            setShowCamera(false);
+            setScanMode(false);
+          };
+
+          const capturePhoto = () => {
+            const video = document.getElementById("camera-preview");
+            const canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext("2d").drawImage(video, 0, 0);
+
+            // Simulate QR scan - in real app, you'd use a QR scanner library here
+            alert(
+              "Foto diambil! Dalam implementasi nyata, ini akan men-scan QR code.",
+            );
+            stopCamera();
+          };
+
+          const handleScanQR = (userId) => {
+            if (handleAbsensi(userId, "hadir")) {
+              alert("Absensi berhasil!");
+              setScanMode(false);
+            } else {
+              alert("Anda sudah absen hari ini!");
+            }
+          };
+
+          const handleIzinSubmit = (e) => {
+            e.preventDefault();
+            handleIzin({
+              ...izinForm,
+              userId: currentUser.id,
+            });
+            alert("Permohonan izin berhasil dikirim!");
+            setShowIzinForm(false);
+          };
+
+          const getAbsensiData = () => {
+            const today = new Date().toISOString().split("T")[0];
+            if (currentUser?.status === "admin" && selectedKelas) {
+              const kelasUsers = users.filter((u) => {
+                if (selectedKelas === "Guru") return u.status === "guru";
+                return u.kelas === selectedKelas;
+              });
+              return kelasUsers.map((u) => ({
+                ...u,
+                absensiToday: absensi.find(
+                  (a) => a.userId === u.id && a.tanggal === today,
+                ),
+              }));
+            } else {
+              return absensi.filter((a) => a.userId === currentUser?.id);
+            }
+          };
+
+          if (currentUser?.status === "admin") {
+            return (
+              <div className="p-6">
+                <h1 className="text-2xl font-bold text-gray-800 mb-6">
+                  Absensi
+                </h1>
+
+                <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+                  <h2 className="text-lg font-semibold mb-4">Pilih Kelas</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {kelasList.map((kelas) => (
+                      <button
+                        key={kelas}
+                        onClick={() => setSelectedKelas(kelas)}
+                        className={`px-4 py-3 rounded-lg font-medium transition duration-200 ${
+                          selectedKelas === kelas
+                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        {kelas}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {selectedKelas && (
+                  <div className="bg-white rounded-xl shadow-md p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-lg font-semibold">
+                        Data Absensi {selectedKelas}
+                      </h2>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            setScanMode(!scanMode);
+                            if (!scanMode) {
+                              setShowCamera(false);
+                              if (stream) {
+                                stream
+                                  .getTracks()
+                                  .forEach((track) => track.stop());
+                                setStream(null);
+                              }
+                            }
+                          }}
+                          className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center space-x-2"
+                        >
+                          <Icon type="qr" className="w-5 h-5" />
+                          <span>
+                            {scanMode ? "Tutup Scanner" : "Scan QR Code"}
+                          </span>
+                        </button>
+                        {scanMode && (
+                          <button
+                            onClick={showCamera ? stopCamera : startCamera}
+                            className="bg-gradient-to-r from-green-600 to-teal-600 text-white px-4 py-2 rounded-lg hover:from-green-700 hover:to-teal-700 flex items-center space-x-2"
+                          >
+                            <Icon type="camera" className="w-5 h-5" />
+                            <span>
+                              {showCamera ? "Tutup Kamera" : "Buka Kamera"}
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Camera Preview */}
+                    {showCamera && (
+                      <div className="mb-6 bg-black rounded-lg overflow-hidden">
+                        <div className="relative">
+                          <video
+                            id="camera-preview"
+                            autoPlay
+                            playsInline
+                            className="w-full h-96 object-cover"
+                          ></video>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-64 h-64 border-4 border-white rounded-lg"></div>
+                          </div>
+                          <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+                            <button
+                              onClick={capturePhoto}
+                              className="bg-white text-gray-800 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-gray-100"
+                            >
+                              Scan QR Code
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                              No
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                              Nama
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                              {selectedKelas === "Guru" ? "Jabatan" : "NIS"}
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                              Status
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                              Waktu
+                            </th>
+                            {scanMode && (
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                                Aksi
+                              </th>
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {getAbsensiData().map((user, index) => (
+                            <tr key={user.id} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 text-sm">{index + 1}</td>
+                              <td className="px-4 py-3 text-sm">{user.nama}</td>
+                              <td className="px-4 py-3 text-sm">
+                                {selectedKelas === "Guru"
+                                  ? user.jabatan
+                                  : user.nis}
+                              </td>
+                              <td className="px-4 py-3 text-sm">
+                                <span
+                                  className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    user.absensiToday?.status === "hadir"
+                                      ? "bg-green-100 text-green-800"
+                                      : user.absensiToday?.status === "izin"
+                                        ? "bg-yellow-100 text-yellow-800"
+                                        : "bg-red-100 text-red-800"
+                                  }`}
+                                >
+                                  {user.absensiToday?.status || "Alpha"}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-sm">
+                                {user.absensiToday?.waktu || "-"}
+                              </td>
+                              {scanMode && !user.absensiToday && (
+                                <td className="px-4 py-3 text-sm">
+                                  <button
+                                    onClick={() => handleScanQR(user.id)}
+                                    className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-xs"
+                                  >
+                                    Absen
+                                  </button>
+                                </td>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          // For non-admin users
+          return (
+            <div className="p-6">
+              <h1 className="text-2xl font-bold text-gray-800 mb-6">
+                Absensi Saya
+              </h1>
+
+              <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-lg font-semibold mb-2">
+                      Status Absensi Hari Ini
+                    </h2>
+                    <p className="text-gray-600">
+                      {new Date().toLocaleDateString("id-ID", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowIzinForm(true)}
+                    className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700"
+                  >
+                    Ajukan Izin
+                  </button>
+                </div>
+              </div>
+
+              {showIzinForm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                  <div className="bg-white rounded-xl p-6 max-w-md w-full">
+                    <h2 className="text-xl font-bold mb-4">Form Izin</h2>
+                    <form onSubmit={handleIzinSubmit} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Nama
+                        </label>
+                        <input
+                          type="text"
+                          value={izinForm.nama}
+                          readOnly
+                          className="w-full px-4 py-2 border rounded-lg bg-gray-100"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Kelas
+                        </label>
+                        <input
+                          type="text"
+                          value={izinForm.kelas}
+                          readOnly
+                          className="w-full px-4 py-2 border rounded-lg bg-gray-100"
+                        />
+                      </div>
+                      {currentUser?.status === "siswa" && (
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            NIS
+                          </label>
+                          <input
+                            type="text"
+                            value={izinForm.nis}
+                            readOnly
+                            className="w-full px-4 py-2 border rounded-lg bg-gray-100"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Keterangan
+                        </label>
+                        <textarea
+                          value={izinForm.keterangan}
+                          onChange={(e) =>
+                            setIzinForm({
+                              ...izinForm,
+                              keterangan: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-2 border rounded-lg"
+                          rows="4"
+                          placeholder="Masukkan alasan izin..."
+                          required
+                        />
+                      </div>
+                      <div className="flex space-x-3">
+                        <button
+                          type="submit"
+                          className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                        >
+                          Kirim
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowIzinForm(false)}
+                          className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400"
+                        >
+                          Batal
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <h2 className="text-lg font-semibold mb-4">Riwayat Absensi</h2>
+                <div className="space-y-3">
+                  {getAbsensiData().length > 0 ? (
+                    getAbsensiData()
+                      .reverse()
+                      .map((abs, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center p-4 bg-gray-50 rounded-lg"
+                        >
+                          <div>
+                            <p className="font-medium">{abs.tanggal}</p>
+                            <p className="text-sm text-gray-600">{abs.waktu}</p>
+                          </div>
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              abs.status === "hadir"
+                                ? "bg-green-100 text-green-800"
+                                : abs.status === "izin"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {abs.status}
+                          </span>
+                        </div>
+                      ))
+                  ) : (
+                    <p className="text-center text-gray-500 py-8">
+                      Belum ada riwayat absensi
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // Simplified Profil Page
+        const ProfilPage = () => {
+          const [isEditing, setIsEditing] = useState(false);
+          const [editData, setEditData] = useState({
+            password: currentUser?.password || "",
+            foto: currentUser?.foto || null,
+          });
+
+          // Generate QR Code saat component mount
+          useEffect(() => {
+            if (currentUser) {
+              // Clear previous QR code
+              const qrContainer = document.getElementById("qrcode-container");
+              if (qrContainer) {
+                qrContainer.innerHTML = "";
+
+                // Generate new QR code
+                try {
+                  new QRCode(qrContainer, {
+                    text: JSON.stringify({
+                      id: currentUser.id,
+                      nama: currentUser.nama,
+                      status: currentUser.status,
+                      nis: currentUser.nis || "",
+                      kelas: currentUser.kelas || "",
+                      timestamp: Date.now(),
+                    }),
+                    width: 200,
+                    height: 200,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H,
+                  });
+                } catch (error) {
+                  console.error("QR Code generation error:", error);
+                }
+              }
+            }
+          }, [currentUser]);
+
+          const handleSaveProfile = () => {
+            handleUpdateProfile(editData);
+            setIsEditing(false);
+            alert("Profil berhasil diperbarui!");
+          };
+
+          const handleFotoChange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+              // Validasi ukuran file (max 2MB)
+              if (file.size > 2 * 1024 * 1024) {
+                alert("Ukuran file terlalu besar! Maksimal 2MB");
+                return;
+              }
+
+              // Validasi tipe file
+              if (!file.type.startsWith("image/")) {
+                alert("File harus berupa gambar!");
+                return;
+              }
+
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                setEditData({ ...editData, foto: reader.result });
+              };
+              reader.readAsDataURL(file);
+            }
+          };
+
+          return (
+            <div className="p-6">
+              <h1 className="text-2xl font-bold text-gray-800 mb-6">Profil</h1>
+
+              <div className="bg-white rounded-xl shadow-md p-8 max-w-2xl mx-auto">
+                <div className="flex flex-col items-center mb-6">
+                  {/* Foto Profil */}
+                  <div className="relative mb-4">
+                    <div className="w-32 h-32 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center overflow-hidden relative group">
+                      {editData.foto || currentUser?.foto ? (
+                        <img
+                          src={editData.foto || currentUser.foto}
+                          alt="Profil"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Icon type="user" className="w-16 h-16 text-white" />
+                      )}
+                    </div>
+
+                    {/* Tombol Upload/Change Foto */}
+                    <label className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 cursor-pointer shadow-lg">
+                      <Icon type="camera" className="w-5 h-5" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFotoChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {/* QR Code */}
+                  <div className="mt-4 p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200">
+                    <p className="text-sm font-semibold text-gray-700 mb-3 text-center">
+                      QR Code untuk Absensi
+                    </p>
+                    <div className="bg-white p-4 rounded-lg shadow-inner">
+                      <div
+                        id="qrcode-container"
+                        className="flex items-center justify-center"
+                      ></div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-3 text-center">
+                      Tunjukkan QR Code ini ke admin saat absensi
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nama
+                      </label>
+                      <input
+                        type="text"
+                        value={currentUser?.nama}
+                        readOnly
+                        className="w-full px-4 py-2 border rounded-lg bg-gray-50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Status
+                      </label>
+                      <input
+                        type="text"
+                        value={currentUser?.status}
+                        readOnly
+                        className="w-full px-4 py-2 border rounded-lg bg-gray-50"
+                      />
+                    </div>
+                  </div>
+
+                  {currentUser?.status === "siswa" && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          NIS
+                        </label>
+                        <input
+                          type="text"
+                          value={currentUser?.nis}
+                          readOnly
+                          className="w-full px-4 py-2 border rounded-lg bg-gray-50"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Kelas
+                        </label>
+                        <input
+                          type="text"
+                          value={currentUser?.kelas}
+                          readOnly
+                          className="w-full px-4 py-2 border rounded-lg bg-gray-50"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {currentUser?.status === "guru" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Jabatan
+                      </label>
+                      <input
+                        type="text"
+                        value={currentUser?.jabatan}
+                        readOnly
+                        className="w-full px-4 py-2 border rounded-lg bg-gray-50"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tanggal Lahir
+                    </label>
+                    <input
+                      type="text"
+                      value={currentUser?.tanggalLahir}
+                      readOnly
+                      className="w-full px-4 py-2 border rounded-lg bg-gray-50"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Password
+                    </label>
+                    <input
+                      type={isEditing ? "text" : "password"}
+                      value={
+                        isEditing ? editData.password : currentUser?.password
+                      }
+                      onChange={(e) =>
+                        setEditData({ ...editData, password: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                      className={`w-full px-4 py-2 border rounded-lg ${isEditing ? "bg-white" : "bg-gray-50"}`}
+                    />
+                  </div>
+
+                  <div className="flex space-x-3 pt-4">
+                    {!isEditing ? (
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center space-x-2"
+                      >
+                        <Icon type="edit" className="w-5 h-5" />
+                        <span>Edit Password</span>
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={handleSaveProfile}
+                          className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                        >
+                          Simpan
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsEditing(false);
+                            setEditData({
+                              password: currentUser?.password,
+                              foto: currentUser?.foto,
+                            });
+                          }}
+                          className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400"
+                        >
+                          Batal
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // Component: Statistik
+        const StatistikPage = () => {
+          const today = new Date().toISOString().split("T")[0];
+          const todayAbsensi = absensi.filter((a) => a.tanggal === today);
+
+          const totalSiswa = users.filter((u) => u.status === "siswa").length;
+          const totalGuru = users.filter((u) => u.status === "guru").length;
+          const hadirHariIni = todayAbsensi.filter(
+            (a) => a.status === "hadir",
+          ).length;
+          const izinHariIni = todayAbsensi.filter(
+            (a) => a.status === "izin",
+          ).length;
+          const alphaHariIni =
+            totalSiswa + totalGuru - hadirHariIni - izinHariIni;
+
+          // Statistik per minggu
+          const getWeekStats = () => {
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            const weekAgoStr = weekAgo.toISOString().split("T")[0];
+
+            const weekAbsensi = absensi.filter((a) => a.tanggal >= weekAgoStr);
+            return {
+              hadir: weekAbsensi.filter((a) => a.status === "hadir").length,
+              izin: weekAbsensi.filter((a) => a.status === "izin").length,
+              total: weekAbsensi.length,
+            };
+          };
+
+          const weekStats = getWeekStats();
+
+          return (
+            <div className="p-6">
+              <h1 className="text-2xl font-bold text-gray-800 mb-6">
+                Statistik
+              </h1>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div className="bg-white rounded-xl shadow-md p-6 card-hover">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-600 text-sm mb-1">Total Siswa</p>
+                      <p className="text-3xl font-bold text-blue-600">
+                        {totalSiswa}
+                      </p>
+                    </div>
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Icon type="users" className="w-8 h-8 text-blue-600" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-md p-6 card-hover">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-600 text-sm mb-1">Total Guru</p>
+                      <p className="text-3xl font-bold text-purple-600">
+                        {totalGuru}
+                      </p>
+                    </div>
+                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
+                      <Icon
+                        type="graduation"
+                        className="w-8 h-8 text-purple-600"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-md p-6 card-hover">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-600 text-sm mb-1">
+                        Hadir Hari Ini
+                      </p>
+                      <p className="text-3xl font-bold text-green-600">
+                        {hadirHariIni}
+                      </p>
+                    </div>
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                      <Icon type="clock" className="w-8 h-8 text-green-600" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-md p-6 card-hover">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-600 text-sm mb-1">
+                        Alpha Hari Ini
+                      </p>
+                      <p className="text-3xl font-bold text-red-600">
+                        {alphaHariIni}
+                      </p>
+                    </div>
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                      <Icon type="calendar" className="w-8 h-8 text-red-600" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white rounded-xl shadow-md p-6">
+                  <h2 className="text-xl font-semibold mb-4">
+                    Rekapitulasi Absensi Hari Ini
+                  </h2>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg">
+                      <span className="font-medium text-green-900">Hadir</span>
+                      <span className="text-2xl font-bold text-green-600">
+                        {hadirHariIni}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-4 bg-yellow-50 rounded-lg">
+                      <span className="font-medium text-yellow-900">Izin</span>
+                      <span className="text-2xl font-bold text-yellow-600">
+                        {izinHariIni}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-4 bg-red-50 rounded-lg">
+                      <span className="font-medium text-red-900">Alpha</span>
+                      <span className="text-2xl font-bold text-red-600">
+                        {alphaHariIni}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-md p-6">
+                  <h2 className="text-xl font-semibold mb-4">
+                    Statistik 7 Hari Terakhir
+                  </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">
+                          Tingkat Kehadiran
+                        </span>
+                        <span className="text-sm font-bold text-blue-600">
+                          {weekStats.total > 0
+                            ? Math.round(
+                                (weekStats.hadir / weekStats.total) * 100,
+                              )
+                            : 0}
+                          %
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div
+                          className="bg-gradient-to-r from-blue-600 to-purple-600 h-3 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${weekStats.total > 0 ? (weekStats.hadir / weekStats.total) * 100 : 0}%`,
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mt-6">
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-600 mb-1">
+                          Total Hadir
+                        </p>
+                        <p className="text-2xl font-bold text-green-600">
+                          {weekStats.hadir}
+                        </p>
+                      </div>
+                      <div className="bg-yellow-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-600 mb-1">Total Izin</p>
+                        <p className="text-2xl font-bold text-yellow-600">
+                          {weekStats.izin}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-md p-6 mt-6">
+                <h2 className="text-xl font-semibold mb-4">Informasi Umum</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <Icon
+                      type="users"
+                      className="w-12 h-12 text-blue-600 mx-auto mb-2"
+                    />
+                    <p className="text-sm text-gray-600">Total Pengguna</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {users.length}
+                    </p>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <Icon
+                      type="calendar"
+                      className="w-12 h-12 text-purple-600 mx-auto mb-2"
+                    />
+                    <p className="text-sm text-gray-600">Tahun Ajaran</p>
+                    <p className="text-xl font-bold text-purple-600">
+                      {tahunAjaran}
+                    </p>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <Icon
+                      type="clock"
+                      className="w-12 h-12 text-green-600 mx-auto mb-2"
+                    />
+                    <p className="text-sm text-gray-600">Jam Absensi</p>
+                    <p className="text-lg font-bold text-green-600">
+                      {jamAbsensi.mulai} - {jamAbsensi.selesai}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // Component: Pengaturan
+        const PengaturanPage = () => {
+          const [settings, setSettings] = useState({
+            jamMulai: jamAbsensi.mulai,
+            jamSelesai: jamAbsensi.selesai,
+            tahunAjaran: tahunAjaran,
+            tahunAjaranBaru: "",
+          });
+
+          const [localHariLiburMingguan, setLocalHariLiburMingguan] =
+            useState(hariLiburMingguan);
+          const [localHariLiburPanjang, setLocalHariLiburPanjang] =
+            useState(hariLiburPanjang);
+          const [showTambahLibur, setShowTambahLibur] = useState(false);
+          const [liburBaru, setLiburBaru] = useState({
+            nama: "",
+            tanggalMulai: "",
+            tanggalSelesai: "",
+          });
+
+          // State lokal untuk konten beranda
+          const [localLogoSekolah, setLocalLogoSekolah] = useState(logoSekolah);
+          const [localBackgroundSekolah, setLocalBackgroundSekolah] =
+            useState(backgroundSekolah);
+          const [localVisiSekolah, setLocalVisiSekolah] = useState(visiSekolah);
+          const [localMisiSekolah, setLocalMisiSekolah] = useState(misiSekolah);
+          const [localPeraturanSekolah, setLocalPeraturanSekolah] =
+            useState(peraturanSekolah);
+          const [localPeraturanAbsensi, setLocalPeraturanAbsensi] =
+            useState(peraturanAbsensi);
+
+          const daftarHari = [
+            "Senin",
+            "Selasa",
+            "Rabu",
+            "Kamis",
+            "Jumat",
+            "Sabtu",
+            "Minggu",
+          ];
+
+          if (currentUser?.status !== "admin") {
+            return (
+              <div className="p-6">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+                  Anda tidak memiliki akses ke halaman ini.
+                </div>
+              </div>
+            );
+          }
+
+          const handleSaveSettings = () => {
+            // Save jam absensi dan tahun ajaran
+            setJamAbsensi({
+              mulai: settings.jamMulai,
+              selesai: settings.jamSelesai,
+            });
+            setTahunAjaran(settings.tahunAjaran);
+
+            // Save hari libur
+            setHariLiburMingguan(localHariLiburMingguan);
+            setHariLiburPanjang(localHariLiburPanjang);
+            saveToStorage("hariLiburMingguan", localHariLiburMingguan);
+            saveToStorage("hariLiburPanjang", localHariLiburPanjang);
+
+            // Save konten beranda
+            setLogoSekolah(localLogoSekolah);
+            setBackgroundSekolah(localBackgroundSekolah);
+            setVisiSekolah(localVisiSekolah);
+            setMisiSekolah(localMisiSekolah);
+            setPeraturanSekolah(localPeraturanSekolah);
+            setPeraturanAbsensi(localPeraturanAbsensi);
+
+            saveToStorage("logoSekolah", localLogoSekolah);
+            saveToStorage("backgroundSekolah", localBackgroundSekolah);
+            saveToStorage("visiSekolah", localVisiSekolah);
+            saveToStorage("misiSekolah", localMisiSekolah);
+            saveToStorage("peraturanSekolah", localPeraturanSekolah);
+            saveToStorage("peraturanAbsensi", localPeraturanAbsensi);
+
+            alert("✅ Semua pengaturan berhasil disimpan!");
+          };
+
+          const toggleHariLibur = (hari) => {
+            if (localHariLiburMingguan.includes(hari)) {
+              setLocalHariLiburMingguan(
+                localHariLiburMingguan.filter((h) => h !== hari),
+              );
+            } else {
+              setLocalHariLiburMingguan([...localHariLiburMingguan, hari]);
+            }
+          };
+
+          const handleTambahLiburPanjang = (e) => {
+            e.preventDefault();
+            if (
+              liburBaru.nama &&
+              liburBaru.tanggalMulai &&
+              liburBaru.tanggalSelesai
+            ) {
+              setLocalHariLiburPanjang([
+                ...localHariLiburPanjang,
+                {
+                  id: Date.now(),
+                  ...liburBaru,
+                },
+              ]);
+              setLiburBaru({ nama: "", tanggalMulai: "", tanggalSelesai: "" });
+              setShowTambahLibur(false);
+              alert("Hari libur panjang berhasil ditambahkan!");
+            }
+          };
+
+          const hapusLiburPanjang = (id) => {
+            if (confirm("Hapus hari libur ini?")) {
+              setLocalHariLiburPanjang(
+                localHariLiburPanjang.filter((l) => l.id !== id),
+              );
+            }
+          };
+
+          const handleNaikKelas = () => {
+            console.log("=== PROSES NAIK KELAS DIMULAI ===");
+
+            // Mapping kelas naik
+            const kelasMapping = {
+              "10A": ["11 IPA", "11 IPS"],
+              "10B": ["11 IPA", "11 IPS"],
+              "11 IPA": "12 IPA",
+              "11 IPS": "12 IPS",
+              "12 IPA": "ALUMNI",
+              "12 IPS": "ALUMNI",
+            };
+
+            // Proses setiap siswa
+            const updatedUsers = users
+              .map((user) => {
+                if (user.status !== "siswa") return user;
+
+                const kelasSekarang = user.kelas;
+                const kelasBerikutnya = kelasMapping[kelasSekarang];
+
+                // Jika kelas 12, pindah ke alumni
+                if (kelasBerikutnya === "ALUMNI") {
+                  console.log(`Siswa ${user.nama} (${kelasSekarang}) → ALUMNI`);
+                  // Tambahkan ke alumni
+                  const alumniData = {
+                    ...user,
+                    tahunLulus: settings.tahunAjaranBaru,
+                    tanggalLulus: new Date().toISOString().split("T")[0],
+                  };
+                  setAlumni([...alumni, alumniData]);
+
+                  // Return null untuk dihapus dari users
+                  return null;
+                }
+
+                // Jika kelas 10, random pilih IPA atau IPS
+                if (Array.isArray(kelasBerikutnya)) {
+                  const kelasBaru =
+                    kelasBerikutnya[
+                      Math.floor(Math.random() * kelasBerikutnya.length)
+                    ];
+                  console.log(
+                    `Siswa ${user.nama} (${kelasSekarang}) → ${kelasBaru}`,
+                  );
+                  return { ...user, kelas: kelasBaru };
+                }
+
+                // Naik kelas normal
+                console.log(
+                  `Siswa ${user.nama} (${kelasSekarang}) → ${kelasBerikutnya}`,
+                );
+                return { ...user, kelas: kelasBerikutnya };
+              })
+              .filter((user) => user !== null); // Filter alumni yang sudah null
+
+            // Update users
+            setUsers(updatedUsers);
+
+            // Update tahun ajaran
+            setTahunAjaran(settings.tahunAjaranBaru);
+            setSettings({ ...settings, tahunAjaran: settings.tahunAjaranBaru });
+
+            // Reset absensi untuk tahun baru
+            setAbsensi([]);
+
+            // Save semua perubahan
+            saveToStorage("users", updatedUsers);
+            saveToStorage("tahunAjaran", settings.tahunAjaranBaru);
+            saveToStorage("alumni", alumni);
+            saveToStorage("absensi", []);
+
+            console.log("=== PROSES NAIK KELAS SELESAI ===");
+
+            alert(
+              `✅ PROSES NAIK KELAS BERHASIL!\n\n• Siswa berhasil naik kelas\n• Tahun ajaran diubah menjadi ${settings.tahunAjaranBaru}\n• Siswa kelas 12 dipindahkan ke Alumni\n• Data absensi direset\n\nSilakan cek menu Siswa dan Alumni untuk melihat perubahan.`,
+            );
+          };
+
+          const formatTanggal = (tanggal) => {
+            return new Date(tanggal).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            });
+          };
+
+          return (
+            <div className="p-6">
+              <h1 className="text-2xl font-bold text-gray-800 mb-6">
+                Pengaturan
+              </h1>
+
+              {/* Pengaturan Jam Absensi */}
+              <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h2 className="text-lg font-semibold mb-4 flex items-center">
+                  <Icon type="clock" className="w-6 h-6 mr-2 text-blue-600" />
+                  Jam Absensi
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Jam Mulai
+                    </label>
+                    <input
+                      type="time"
+                      value={settings.jamMulai}
+                      onChange={(e) =>
+                        setSettings({ ...settings, jamMulai: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Jam Selesai
+                    </label>
+                    <input
+                      type="time"
+                      value={settings.jamSelesai}
+                      onChange={(e) =>
+                        setSettings({ ...settings, jamSelesai: e.target.value })
+                      }
+                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Pengaturan Tahun Ajaran */}
+              <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h2 className="text-lg font-semibold mb-4 flex items-center">
+                  <Icon
+                    type="calendar"
+                    className="w-6 h-6 mr-2 text-purple-600"
+                  />
+                  Tahun Ajaran
+                </h2>
+                <input
+                  type="text"
+                  value={settings.tahunAjaran}
+                  onChange={(e) =>
+                    setSettings({ ...settings, tahunAjaran: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Contoh: 2024/2025"
+                />
+              </div>
+
+              {/* Pengaturan Hari Libur Mingguan */}
+              <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h2 className="text-lg font-semibold mb-4 flex items-center">
+                  <Icon
+                    type="calendar"
+                    className="w-6 h-6 mr-2 text-green-600"
+                  />
+                  Hari Libur Mingguan
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Pilih hari-hari yang menjadi libur setiap minggu
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                  {daftarHari.map((hari) => (
+                    <button
+                      key={hari}
+                      onClick={() => toggleHariLibur(hari)}
+                      className={`px-4 py-3 rounded-lg font-medium transition duration-200 ${
+                        localHariLiburMingguan.includes(hari)
+                          ? "bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {hari}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-900">
+                    <strong>Hari libur mingguan:</strong>{" "}
+                    {hariLiburMingguan.join(", ") || "Belum ada hari libur"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Pengaturan Hari Libur Panjang */}
+              <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold flex items-center">
+                    <Icon
+                      type="calendar"
+                      className="w-6 h-6 mr-2 text-orange-600"
+                    />
+                    Hari Libur Panjang
+                  </h2>
+                  <button
+                    onClick={() => setShowTambahLibur(true)}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center space-x-2"
+                  >
+                    <span className="text-xl">+</span>
+                    <span>Tambah Libur</span>
+                  </button>
+                </div>
+
+                {localHariLiburPanjang.length > 0 ? (
+                  <div className="space-y-3">
+                    {localHariLiburPanjang.map((libur) => (
+                      <div
+                        key={libur.id}
+                        className="flex justify-between items-center p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border-l-4 border-orange-500"
+                      >
+                        <div>
+                          <h3 className="font-semibold text-gray-800">
+                            {libur.nama}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {formatTanggal(libur.tanggalMulai)} -{" "}
+                            {formatTanggal(libur.tanggalSelesai)}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => hapusLiburPanjang(libur.id)}
+                          className="text-red-600 hover:bg-red-100 p-2 rounded-lg transition"
+                        >
+                          <Icon type="trash" className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Icon
+                      type="calendar"
+                      className="w-16 h-16 mx-auto mb-2 text-gray-300"
+                    />
+                    <p>Belum ada hari libur panjang yang dijadwalkan</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Tambah Libur Panjang */}
+              {showTambahLibur && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                  <div className="bg-white rounded-xl p-6 max-w-md w-full">
+                    <h2 className="text-xl font-bold mb-4">
+                      Tambah Hari Libur Panjang
+                    </h2>
+                    <form
+                      onSubmit={handleTambahLiburPanjang}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Nama Libur
+                        </label>
+                        <input
+                          type="text"
+                          value={liburBaru.nama}
+                          onChange={(e) =>
+                            setLiburBaru({ ...liburBaru, nama: e.target.value })
+                          }
+                          className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                          placeholder="Contoh: Libur Semester"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Tanggal Mulai
+                        </label>
+                        <input
+                          type="date"
+                          value={liburBaru.tanggalMulai}
+                          onChange={(e) =>
+                            setLiburBaru({
+                              ...liburBaru,
+                              tanggalMulai: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Tanggal Selesai
+                        </label>
+                        <input
+                          type="date"
+                          value={liburBaru.tanggalSelesai}
+                          onChange={(e) =>
+                            setLiburBaru({
+                              ...liburBaru,
+                              tanggalSelesai: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+                      <div className="flex space-x-3">
+                        <button
+                          type="submit"
+                          className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold"
+                        >
+                          Tambah
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowTambahLibur(false);
+                            setLiburBaru({
+                              nama: "",
+                              tanggalMulai: "",
+                              tanggalSelesai: "",
+                            });
+                          }}
+                          className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-semibold"
+                        >
+                          Batal
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* 6. Naik Kelas & Tahun Ajaran */}
+              <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                  <span className="text-2xl mr-2">🎓</span>
+                  Naik Kelas & Tahun Ajaran Baru
+                </h2>
+
+                <div className="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-lg p-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-3xl">📚</span>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-800 mb-2">
+                        Proses Naik Kelas
+                      </h3>
+                      <p className="text-sm text-gray-700 mb-4">
+                        Fitur ini akan melakukan:
+                      </p>
+                      <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 mb-4">
+                        <li>
+                          Menaikkan semua siswa ke kelas berikutnya (10A→11
+                          IPA/IPS, 11→12, 12→Alumni)
+                        </li>
+                        <li>Mengubah tahun ajaran secara otomatis</li>
+                        <li>Memindahkan siswa kelas 12 ke daftar Alumni</li>
+                        <li>Mereset data absensi untuk tahun baru</li>
+                      </ul>
+
+                      <div className="bg-white rounded-lg p-4 mb-4">
+                        <p className="text-sm font-semibold text-gray-800 mb-2">
+                          Tahun Ajaran Saat Ini:
+                        </p>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {settings.tahunAjaran}
+                        </p>
+
+                        <p className="text-sm font-semibold text-gray-800 mt-3 mb-2">
+                          Akan Berubah Menjadi:
+                        </p>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={settings.tahunAjaranBaru || ""}
+                            onChange={(e) =>
+                              setSettings({
+                                ...settings,
+                                tahunAjaranBaru: e.target.value,
+                              })
+                            }
+                            className="px-4 py-2 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-semibold"
+                            placeholder="Contoh: 2025/2026"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="bg-yellow-100 border-l-4 border-yellow-500 p-3 mb-4">
+                        <p className="text-sm font-semibold text-yellow-800">
+                          ⚠️ Peringatan:
+                        </p>
+                        <p className="text-xs text-yellow-700">
+                          Proses ini TIDAK BISA DIBATALKAN! Pastikan Anda sudah
+                          melakukan backup data jika diperlukan.
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          if (!settings.tahunAjaranBaru) {
+                            alert(
+                              "❌ Mohon isi tahun ajaran baru terlebih dahulu!",
+                            );
+                            return;
+                          }
+
+                          const confirm1 = confirm(
+                            `⚠️ KONFIRMASI NAIK KELAS\n\nAnda akan menaikkan semua siswa ke kelas berikutnya dan mengubah tahun ajaran menjadi ${settings.tahunAjaranBaru}.\n\nProses ini TIDAK BISA DIBATALKAN!\n\nLanjutkan?`,
+                          );
+
+                          if (!confirm1) return;
+
+                          const confirm2 = confirm(
+                            "⚠️ KONFIRMASI TERAKHIR\n\nApakah Anda BENAR-BENAR YAKIN?\n\nSemua siswa akan naik kelas dan data absensi akan direset!",
+                          );
+
+                          if (!confirm2) return;
+
+                          handleNaikKelas();
+                        }}
+                        className="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-3 rounded-lg hover:from-orange-700 hover:to-red-700 font-bold shadow-lg flex items-center justify-center space-x-2"
+                      >
+                        <span>🎓</span>
+                        <span>Proses Naik Kelas & Ganti Tahun Ajaran</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 7. Konten Beranda */}
+              <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                  <span className="text-2xl mr-2">🏫</span>
+                  Konten Beranda
+                </h2>
+
+                {/* Logo Sekolah */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Logo Sekolah
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
+                      {localLogoSekolah ? (
+                        <img
+                          src={localLogoSekolah}
+                          alt="Logo"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Icon
+                          type="graduation"
+                          className="w-12 h-12 text-white"
+                        />
+                      )}
+                    </div>
+                    <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                      <span>Upload Logo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            if (file.size > 2 * 1024 * 1024) {
+                              alert("Ukuran file maksimal 2MB");
+                              return;
+                            }
+                            const reader = new FileReader();
+                            reader.onloadend = () =>
+                              setLocalLogoSekolah(reader.result);
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                    {localLogoSekolah && (
+                      <button
+                        onClick={() => setLocalLogoSekolah(null)}
+                        className="text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg"
+                      >
+                        Hapus
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Background Sekolah */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Background Beranda (URL)
+                  </label>
+                  <input
+                    type="url"
+                    value={localBackgroundSekolah}
+                    onChange={(e) => setLocalBackgroundSekolah(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Atau gunakan URL dari Unsplash/Pexels
+                  </p>
+                  <div className="mt-2 h-32 rounded-lg overflow-hidden border">
+                    <div
+                      className="w-full h-full"
+                      style={{
+                        background: `url('${localBackgroundSekolah}') center/cover no-repeat`,
+                      }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Visi */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Visi Sekolah
+                  </label>
+                  <textarea
+                    value={localVisiSekolah}
+                    onChange={(e) => setLocalVisiSekolah(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    rows="3"
+                    placeholder="Masukkan visi sekolah..."
+                  />
+                </div>
+
+                {/* Misi */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Misi Sekolah
+                  </label>
+                  {localMisiSekolah.map((misi, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 mb-2"
+                    >
+                      <input
+                        type="text"
+                        value={misi}
+                        onChange={(e) => {
+                          const newMisi = [...localMisiSekolah];
+                          newMisi[index] = e.target.value;
+                          setLocalMisiSekolah(newMisi);
+                        }}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder={`Misi ${index + 1}`}
+                      />
+                      <button
+                        onClick={() => {
+                          const newMisi = localMisiSekolah.filter(
+                            (_, i) => i !== index,
+                          );
+                          setLocalMisiSekolah(newMisi);
+                        }}
+                        className="text-red-600 hover:bg-red-50 p-2 rounded-lg"
+                      >
+                        <Icon type="trash" className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() =>
+                      setLocalMisiSekolah([...localMisiSekolah, ""])
+                    }
+                    className="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg text-sm"
+                  >
+                    + Tambah Misi
+                  </button>
+                </div>
+
+                {/* Peraturan Sekolah */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Peraturan Sekolah
+                  </label>
+                  {localPeraturanSekolah.map((peraturan, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 mb-2"
+                    >
+                      <input
+                        type="text"
+                        value={peraturan}
+                        onChange={(e) => {
+                          const newPeraturan = [...localPeraturanSekolah];
+                          newPeraturan[index] = e.target.value;
+                          setLocalPeraturanSekolah(newPeraturan);
+                        }}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder={`Peraturan ${index + 1}`}
+                      />
+                      <button
+                        onClick={() => {
+                          const newPeraturan = localPeraturanSekolah.filter(
+                            (_, i) => i !== index,
+                          );
+                          setLocalPeraturanSekolah(newPeraturan);
+                        }}
+                        className="text-red-600 hover:bg-red-50 p-2 rounded-lg"
+                      >
+                        <Icon type="trash" className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() =>
+                      setLocalPeraturanSekolah([...localPeraturanSekolah, ""])
+                    }
+                    className="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg text-sm"
+                  >
+                    + Tambah Peraturan
+                  </button>
+                </div>
+
+                {/* Peraturan Absensi */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Peraturan Absensi
+                  </label>
+                  {localPeraturanAbsensi.map((peraturan, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 mb-2"
+                    >
+                      <input
+                        type="text"
+                        value={peraturan}
+                        onChange={(e) => {
+                          const newPeraturan = [...localPeraturanAbsensi];
+                          newPeraturan[index] = e.target.value;
+                          setLocalPeraturanAbsensi(newPeraturan);
+                        }}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder={`Peraturan ${index + 1}`}
+                      />
+                      <button
+                        onClick={() => {
+                          const newPeraturan = localPeraturanAbsensi.filter(
+                            (_, i) => i !== index,
+                          );
+                          setLocalPeraturanAbsensi(newPeraturan);
+                        }}
+                        className="text-red-600 hover:bg-red-50 p-2 rounded-lg"
+                      >
+                        <Icon type="trash" className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() =>
+                      setLocalPeraturanAbsensi([...localPeraturanAbsensi, ""])
+                    }
+                    className="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg text-sm"
+                  >
+                    + Tambah Peraturan Absensi
+                  </button>
+                </div>
+              </div>
+
+              {/* Tombol Simpan Pengaturan */}
+              <div className="flex justify-end">
+                <button
+                  onClick={handleSaveSettings}
+                  className="bg-gradient-to-r from-green-600 to-teal-600 text-white px-8 py-3 rounded-lg hover:from-green-700 hover:to-teal-700 font-semibold shadow-lg"
+                >
+                  Simpan Semua Pengaturan
+                </button>
+              </div>
+            </div>
+          );
+        };
+
+        // Component: Siswa Page
+        const SiswaPage = () => {
+          const [selectedKelas, setSelectedKelas] = useState("10A");
+          const kelasList = [
+            "10A",
+            "10B",
+            "11 IPA",
+            "11 IPS",
+            "12 IPA",
+            "12 IPS",
+          ];
+
+          if (
+            currentUser?.status !== "admin" &&
+            currentUser?.status !== "siswa"
+          ) {
+            return (
+              <div className="p-6">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+                  ❌ Anda tidak memiliki akses ke halaman ini.
+                </div>
+              </div>
+            );
+          }
+
+          const siswaByKelas = users.filter(
+            (u) => u.status === "siswa" && u.kelas === selectedKelas,
+          );
+
+          return (
+            <div className="p-6">
+              <h1 className="text-2xl font-bold text-gray-800 mb-6">
+                Data Siswa
+              </h1>
+
+              <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h2 className="text-lg font-semibold mb-4">Pilih Kelas</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {kelasList.map((kelas) => (
+                    <button
+                      key={kelas}
+                      onClick={() => setSelectedKelas(kelas)}
+                      className={`px-4 py-3 rounded-lg font-medium transition duration-200 ${
+                        selectedKelas === kelas
+                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {kelas}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {siswaByKelas.map((siswa) => (
+                  <div
+                    key={siswa.id}
+                    className="bg-white rounded-xl shadow-md p-6 card-hover"
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full mb-4 flex items-center justify-center overflow-hidden">
+                        {siswa.foto ? (
+                          <img
+                            src={siswa.foto}
+                            alt={siswa.nama}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Icon type="user" className="w-12 h-12 text-white" />
+                        )}
+                      </div>
+                      <h3 className="font-semibold text-lg text-center mb-3">
+                        {siswa.nama}
+                      </h3>
+                      <div className="text-sm text-gray-600 space-y-2 w-full bg-gray-50 p-3 rounded-lg">
+                        <div className="flex justify-between">
+                          <span className="font-medium">NIS:</span>
+                          <span>{siswa.nis}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Kelas:</span>
+                          <span>{siswa.kelas}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Tanggal Lahir:</span>
+                          <span>{siswa.tanggalLahir}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {siswaByKelas.length === 0 && (
+                <div className="bg-white rounded-xl shadow-md p-8 text-center">
+                  <Icon
+                    type="users"
+                    className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                  />
+                  <p className="text-gray-500">
+                    Belum ada data siswa untuk kelas {selectedKelas}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-2">
+                    Silakan daftarkan siswa melalui halaman Register atau Data
+                    Pengguna
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        // Component: Guru Page
+        const GuruPage = () => {
+          if (
+            currentUser?.status !== "admin" &&
+            currentUser?.status !== "guru"
+          ) {
+            return (
+              <div className="p-6">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+                  ❌ Anda tidak memiliki akses ke halaman ini.
+                </div>
+              </div>
+            );
+          }
+
+          const guruList = users.filter((u) => u.status === "guru");
+
+          return (
+            <div className="p-6">
+              <h1 className="text-2xl font-bold text-gray-800 mb-6">
+                Data Guru
+              </h1>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {guruList.map((guru) => (
+                  <div
+                    key={guru.id}
+                    className="bg-white rounded-xl shadow-md p-6 card-hover"
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full mb-4 flex items-center justify-center overflow-hidden">
+                        {guru.foto ? (
+                          <img
+                            src={guru.foto}
+                            alt={guru.nama}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Icon
+                            type="graduation"
+                            className="w-12 h-12 text-white"
+                          />
+                        )}
+                      </div>
+                      <h3 className="font-semibold text-lg text-center mb-3">
+                        {guru.nama}
+                      </h3>
+                      <div className="text-sm text-gray-600 space-y-2 w-full bg-gray-50 p-3 rounded-lg">
+                        <div className="flex justify-between">
+                          <span className="font-medium">Jabatan:</span>
+                          <span className="text-right">{guru.jabatan}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Tanggal Lahir:</span>
+                          <span>{guru.tanggalLahir}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {guruList.length === 0 && (
+                <div className="bg-white rounded-xl shadow-md p-8 text-center">
+                  <Icon
+                    type="graduation"
+                    className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                  />
+                  <p className="text-gray-500">Belum ada data guru</p>
+                  <p className="text-sm text-gray-400 mt-2">
+                    Silakan daftarkan guru melalui halaman Register atau Data
+                    Pengguna
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        // Component: Pesan (untuk admin melihat pesan izin)
+        const PesanPage = () => {
+          if (currentUser?.status !== "admin") {
+            return (
+              <div className="p-6">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+                  ❌ Anda tidak memiliki akses ke halaman ini.
+                </div>
+              </div>
+            );
+          }
+
+          // Mark as read saat buka halaman
+          useEffect(() => {
+            setUnreadMessageCount(0);
+          }, []);
+
+          const handleApprove = (msg) => {
+            if (confirm(`Setujui izin dari ${msg.nama}?`)) {
+              // Update status message
+              setIzinMessages(
+                izinMessages.map((m) =>
+                  m.id === msg.id ? { ...m, status: "approved" } : m,
+                ),
+              );
+              // Catat absensi sebagai izin
+              handleAbsensi(msg.userId, "izin");
+              alert("✅ Izin disetujui! Absensi tercatat sebagai izin.");
+            }
+          };
+
+          const handleReject = (msg) => {
+            const reason = prompt("Alasan penolakan (opsional):");
+            if (reason !== null) {
+              // Update status message
+              setIzinMessages(
+                izinMessages.map((m) =>
+                  m.id === msg.id
+                    ? { ...m, status: "rejected", rejectReason: reason }
+                    : m,
+                ),
+              );
+              alert("❌ Izin ditolak.");
+            }
+          };
+
+          const handleDeleteMessage = (msgId) => {
+            if (confirm("Hapus pesan ini?")) {
+              setIzinMessages(izinMessages.filter((m) => m.id !== msgId));
+              alert("✅ Pesan berhasil dihapus!");
+            }
+          };
+
+          const pendingMessages = izinMessages.filter(
+            (m) => m.status === "pending",
+          );
+          const processedMessages = izinMessages.filter(
+            (m) => m.status !== "pending",
+          );
+
+          return (
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-800">Pesan Izin</h1>
+                <div className="flex space-x-2">
+                  {pendingMessages.length > 0 && (
+                    <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-pulse">
+                      {pendingMessages.length} Menunggu Approval
+                    </span>
+                  )}
+                  {processedMessages.length > 0 && (
+                    <span className="bg-gray-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      {processedMessages.length} Diproses
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Pesan Pending (Menunggu Approval) */}
+              {pendingMessages.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold mb-4 flex items-center">
+                    <span className="w-3 h-3 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+                    Menunggu Approval ({pendingMessages.length})
+                  </h2>
+                  <div className="space-y-4">
+                    {pendingMessages
+                      .slice()
+                      .reverse()
+                      .map((msg) => {
+                        const user = users.find((u) => u.id === msg.userId);
+                        return (
+                          <div
+                            key={msg.id}
+                            className="bg-white rounded-xl shadow-md p-6 border-2 border-yellow-300 hover:shadow-lg transition"
+                          >
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="flex items-start space-x-3">
+                                <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <Icon
+                                    type="bell"
+                                    className="w-6 h-6 text-white"
+                                  />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-lg">
+                                    {msg.nama}
+                                  </h3>
+                                  <p className="text-sm text-gray-600">
+                                    {msg.kelas} {msg.nis && `- NIS: ${msg.nis}`}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm text-gray-500">
+                                  {msg.tanggal}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  {msg.waktu}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded mb-4">
+                              <p className="text-sm font-medium text-yellow-800 mb-1">
+                                Keterangan Izin:
+                              </p>
+                              <p className="text-gray-700">{msg.keterangan}</p>
+                            </div>
+
+                            <div className="flex space-x-3">
+                              <button
+                                onClick={() => handleApprove(msg)}
+                                className="flex-1 flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition"
+                              >
+                                <span>✓</span>
+                                <span>Setujui Izin</span>
+                              </button>
+                              <button
+                                onClick={() => handleReject(msg)}
+                                className="flex-1 flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition"
+                              >
+                                <span>✗</span>
+                                <span>Tolak Izin</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
+              {/* Pesan yang Sudah Diproses */}
+              {processedMessages.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-semibold mb-4 flex items-center">
+                    <span className="w-3 h-3 bg-gray-500 rounded-full mr-2"></span>
+                    Riwayat ({processedMessages.length})
+                  </h2>
+                  <div className="space-y-4">
+                    {processedMessages
+                      .slice()
+                      .reverse()
+                      .map((msg) => {
+                        const user = users.find((u) => u.id === msg.userId);
+                        return (
+                          <div
+                            key={msg.id}
+                            className={`bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition ${
+                              msg.status === "approved"
+                                ? "border-l-4 border-green-500"
+                                : "border-l-4 border-red-500"
+                            }`}
+                          >
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="flex items-start space-x-3">
+                                <div
+                                  className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                    msg.status === "approved"
+                                      ? "bg-gradient-to-br from-green-500 to-teal-500"
+                                      : "bg-gradient-to-br from-red-500 to-pink-500"
+                                  }`}
+                                >
+                                  {msg.status === "approved" ? (
+                                    <span className="text-white text-xl">
+                                      ✓
+                                    </span>
+                                  ) : (
+                                    <span className="text-white text-xl">
+                                      ✗
+                                    </span>
+                                  )}
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-lg">
+                                    {msg.nama}
+                                  </h3>
+                                  <p className="text-sm text-gray-600">
+                                    {msg.kelas} {msg.nis && `- NIS: ${msg.nis}`}
+                                  </p>
+                                  <span
+                                    className={`inline-block mt-1 px-2 py-1 rounded text-xs font-semibold ${
+                                      msg.status === "approved"
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-red-100 text-red-800"
+                                    }`}
+                                  >
+                                    {msg.status === "approved"
+                                      ? "✓ Disetujui"
+                                      : "✗ Ditolak"}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm text-gray-500">
+                                  {msg.tanggal}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  {msg.waktu}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="bg-gray-50 border-l-4 border-gray-300 p-4 rounded mb-3">
+                              <p className="text-sm font-medium text-gray-700 mb-1">
+                                Keterangan:
+                              </p>
+                              <p className="text-gray-600 text-sm">
+                                {msg.keterangan}
+                              </p>
+                            </div>
+
+                            {msg.status === "rejected" && msg.rejectReason && (
+                              <div className="bg-red-50 border-l-4 border-red-300 p-4 rounded mb-3">
+                                <p className="text-sm font-medium text-red-700 mb-1">
+                                  Alasan Penolakan:
+                                </p>
+                                <p className="text-red-600 text-sm">
+                                  {msg.rejectReason}
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="flex justify-end">
+                              <button
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                className="flex items-center space-x-2 text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg transition"
+                              >
+                                <Icon type="trash" className="w-4 h-4" />
+                                <span className="text-sm">Hapus</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {izinMessages.length === 0 && (
+                <div className="bg-white rounded-xl shadow-md p-12 text-center">
+                  <Icon
+                    type="bell"
+                    className="w-20 h-20 text-gray-300 mx-auto mb-4"
+                  />
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                    Tidak Ada Pesan Izin
+                  </h3>
+                  <p className="text-gray-500">
+                    Semua siswa dan guru sudah hadir atau belum ada yang
+                    mengajukan izin
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        // Component: Data Pengguna
+        const DataPenggunaPage = () => {
+          const [showAddForm, setShowAddForm] = useState(false);
+          const [newUser, setNewUser] = useState({
+            username: "",
+            password: "",
+            status: "siswa",
+            nama: "",
+            kelas: "",
+            nis: "",
+            jabatan: "",
+            tanggalLahir: "",
+          });
+
+          if (currentUser?.status !== "admin") {
+            return (
+              <div className="p-6">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+                  ❌ Anda tidak memiliki akses ke halaman ini.
+                </div>
+              </div>
+            );
+          }
+
+          const handleAddUser = (e) => {
+            e.preventDefault();
+            handleRegister(newUser);
+            setShowAddForm(false);
+            setNewUser({
+              username: "",
+              password: "",
+              status: "siswa",
+              nama: "",
+              kelas: "",
+              nis: "",
+              jabatan: "",
+              tanggalLahir: "",
+            });
+            alert("✅ Pengguna berhasil ditambahkan!");
+          };
+
+          const usersByStatus = {
+            admin: users.filter((u) => u.status === "admin"),
+            guru: users.filter((u) => u.status === "guru"),
+            siswa: users.filter((u) => u.status === "siswa"),
+          };
+
+          return (
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-800">
+                  Data Pengguna
+                </h1>
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center space-x-2"
+                >
+                  <Icon type="userPlus" className="w-5 h-5" />
+                  <span>Tambah Pengguna</span>
+                </button>
+              </div>
+
+              {/* Modal Tambah User */}
+              {showAddForm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                  <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                    <h2 className="text-xl font-bold mb-4">
+                      Tambah Pengguna Baru
+                    </h2>
+                    <form onSubmit={handleAddUser} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Username
+                        </label>
+                        <input
+                          type="text"
+                          value={newUser.username}
+                          onChange={(e) =>
+                            setNewUser({ ...newUser, username: e.target.value })
+                          }
+                          className="w-full px-4 py-2 border rounded-lg"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Nama Lengkap
+                        </label>
+                        <input
+                          type="text"
+                          value={newUser.nama}
+                          onChange={(e) =>
+                            setNewUser({ ...newUser, nama: e.target.value })
+                          }
+                          className="w-full px-4 py-2 border rounded-lg"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Status
+                        </label>
+                        <select
+                          value={newUser.status}
+                          onChange={(e) =>
+                            setNewUser({ ...newUser, status: e.target.value })
+                          }
+                          className="w-full px-4 py-2 border rounded-lg"
+                        >
+                          <option value="siswa">Siswa</option>
+                          <option value="guru">Guru</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </div>
+                      {newUser.status === "siswa" && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Kelas
+                            </label>
+                            <select
+                              value={newUser.kelas}
+                              onChange={(e) =>
+                                setNewUser({
+                                  ...newUser,
+                                  kelas: e.target.value,
+                                })
+                              }
+                              className="w-full px-4 py-2 border rounded-lg"
+                              required
+                            >
+                              <option value="">Pilih Kelas</option>
+                              <option value="10A">10A</option>
+                              <option value="10B">10B</option>
+                              <option value="11 IPA">11 IPA</option>
+                              <option value="11 IPS">11 IPS</option>
+                              <option value="12 IPA">12 IPA</option>
+                              <option value="12 IPS">12 IPS</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              NIS
+                            </label>
+                            <input
+                              type="text"
+                              value={newUser.nis}
+                              onChange={(e) =>
+                                setNewUser({ ...newUser, nis: e.target.value })
+                              }
+                              className="w-full px-4 py-2 border rounded-lg"
+                              required
+                            />
+                          </div>
+                        </>
+                      )}
+                      {newUser.status === "guru" && (
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Jabatan
+                          </label>
+                          <input
+                            type="text"
+                            value={newUser.jabatan}
+                            onChange={(e) =>
+                              setNewUser({
+                                ...newUser,
+                                jabatan: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-2 border rounded-lg"
+                            required
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Tanggal Lahir
+                        </label>
+                        <input
+                          type="date"
+                          value={newUser.tanggalLahir}
+                          onChange={(e) =>
+                            setNewUser({
+                              ...newUser,
+                              tanggalLahir: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-2 border rounded-lg"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Password
+                        </label>
+                        <input
+                          type="password"
+                          value={newUser.password}
+                          onChange={(e) =>
+                            setNewUser({ ...newUser, password: e.target.value })
+                          }
+                          className="w-full px-4 py-2 border rounded-lg"
+                          required
+                        />
+                      </div>
+                      <div className="flex space-x-3">
+                        <button
+                          type="submit"
+                          className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                        >
+                          Tambah
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddForm(false)}
+                          className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400"
+                        >
+                          Batal
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* List Users by Status */}
+              <div className="space-y-6">
+                {["admin", "guru", "siswa"].map((status) => {
+                  const statusUsers = usersByStatus[status];
+                  return (
+                    <div
+                      key={status}
+                      className="bg-white rounded-xl shadow-md p-6"
+                    >
+                      <h2 className="text-xl font-semibold mb-4 capitalize flex items-center">
+                        <span
+                          className={`w-3 h-3 rounded-full mr-2 ${
+                            status === "admin"
+                              ? "bg-purple-500"
+                              : status === "guru"
+                                ? "bg-blue-500"
+                                : "bg-green-500"
+                          }`}
+                        ></span>
+                        {status} ({statusUsers.length})
+                      </h2>
+
+                      {statusUsers.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {statusUsers.map((user) => (
+                            <div
+                              key={user.id}
+                              className="border-2 rounded-lg p-4 hover:border-blue-300 transition"
+                            >
+                              <div className="flex items-start space-x-4">
+                                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                  {user.foto ? (
+                                    <img
+                                      src={user.foto}
+                                      alt={user.nama}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <Icon
+                                      type="user"
+                                      className="w-8 h-8 text-white"
+                                    />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold text-lg truncate">
+                                    {user.nama}
+                                  </h3>
+                                  <p className="text-sm text-gray-600">
+                                    Username: {user.username}
+                                  </p>
+                                  <p className="text-sm text-gray-600 capitalize">
+                                    Status: {user.status}
+                                  </p>
+                                  {user.status === "siswa" && (
+                                    <>
+                                      <p className="text-sm text-gray-600">
+                                        NIS: {user.nis}
+                                      </p>
+                                      <p className="text-sm text-gray-600">
+                                        Kelas: {user.kelas}
+                                      </p>
+                                    </>
+                                  )}
+                                  {user.status === "guru" && (
+                                    <p className="text-sm text-gray-600">
+                                      Jabatan: {user.jabatan}
+                                    </p>
+                                  )}
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Password: {user.password}
+                                  </p>
+                                </div>
+                                {(user.status !== "admin" ||
+                                  usersByStatus.admin.length > 1) && (
+                                  <button
+                                    onClick={() => {
+                                      if (
+                                        window.confirm(
+                                          `Hapus akun ${user.nama}?`,
+                                        )
+                                      ) {
+                                        handleDeleteUser(user.id);
+                                        alert("✅ Akun berhasil dihapus!");
+                                      }
+                                    }}
+                                    className="text-red-600 hover:bg-red-50 p-2 rounded"
+                                  >
+                                    <Icon type="trash" className="w-5 h-5" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-center text-gray-500 py-4">
+                          Belum ada {status}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        };
+
+        // Placeholder for other pages
+        const PlaceholderPage = ({ title }) => (
+          <div className="p-6">
+            <h1 className="text-2xl font-bold text-gray-800 mb-6">{title}</h1>
+            <div className="bg-white rounded-xl shadow-md p-8 text-center">
+              <p className="text-gray-600">
+                Halaman {title} dalam pengembangan
+              </p>
+            </div>
+          </div>
+        );
+
+        // Main Render
+        if (!currentUser) {
+          return currentPage === "login" ? <LoginPage /> : <RegisterPage />;
+        }
+
+        return (
+          <div className="flex min-h-screen bg-gray-50">
+            <Sidebar />
+            <div className="flex-1 flex flex-col">
+              <Header />
+              <div className="flex-1 overflow-y-auto">
+                {currentPage === "beranda" && <BerandaPage />}
+                {currentPage === "absensi" && <AbsensiPage />}
+                {currentPage === "data-diri" && <ProfilPage />}
+                {currentPage === "profil" && <ProfilPage />}
+                {currentPage === "siswa" && <SiswaPage />}
+                {currentPage === "guru" && <GuruPage />}
+                {currentPage === "alumni" && <PlaceholderPage title="Alumni" />}
+                {currentPage === "data-pengguna" && <DataPenggunaPage />}
+                {currentPage === "statistik" && <StatistikPage />}
+                {currentPage === "pengaturan" && <PengaturanPage />}
+                {currentPage === "pesan" && <PesanPage />}
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // Render App
+      ReactDOM.render(<App />, document.getElementById("root"));
+    </script>
+  </body>
+</html>
